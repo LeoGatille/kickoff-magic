@@ -97,6 +97,16 @@ const onTransitionComplete = () => {
   display: flex;
   align-items: center;
   justify-content: center;
+  width: 100%;
+  max-width: 1000px; /* Increased limit */
+  height: 75vh; /* Larger vertical space */
+}
+
+:deep(.glitch-container), :deep(.simple-image) {
+  width: 100%;
+  height: 100%;
+  max-width: 900px; /* Target even larger size */
+  max-height: 900px;
 }
 
 /* Transitions */

@@ -135,11 +135,32 @@ const animate = () => {
   animationFrameId = requestAnimationFrame(animate);
 };
 
+const containerRef = ref<HTMLElement | null>(null);
+
+const updateCanvasSize = () => {
+  if (containerRef.value && particlesCanvas.value) {
+    const { width, height } = containerRef.value.getBoundingClientRect();
+    particlesCanvas.value.width = width;
+    particlesCanvas.value.height = height;
+  }
+};
+
 onMounted(() => {
-  if (particlesCanvas.value) {
-    const canvas = particlesCanvas.value;
-    canvas.width = 300;
-    canvas.height = 300;
+  if (particlesCanvas.value && containerRef.value) {
+    // Initial size
+    updateCanvasSize();
+    
+    // Observer for resize
+    const resizeObserver = new ResizeObserver(() => {
+      updateCanvasSize();
+    });
+    resizeObserver.observe(containerRef.value);
+    
+    // Cleanup observer on unmount
+    onUnmounted(() => {
+      resizeObserver.disconnect();
+    });
+    
     animate();
   }
 });
@@ -152,24 +173,30 @@ onUnmounted(() => {
 </script>
 
 <template>
-  <div class="glitch-container" :class="{ active: isActive }">
-    <!-- Glitch Aura (behind) -->
-    <div class="glitch-aura"></div>
-    
+  <div class="glitch-container" :class="{ active: isActive }" ref="containerRef">
     <!-- Main Image -->
-    <img :src="src" :alt="alt" class="glitch-img" />
+    <img :src="src" :alt="alt" class="glitch-img main-img" />
     
     <!-- Scan Lines Layer -->
-    <div class="scan-lines"></div>
+    <div class="scan-lines" :style="{ 
+      maskImage: `url(${src})`, 
+      maskSize: 'contain', 
+      maskRepeat: 'no-repeat', 
+      maskPosition: 'center',
+      webkitMaskImage: `url(${src})`, 
+      webkitMaskSize: 'contain', 
+      webkitMaskRepeat: 'no-repeat', 
+      webkitMaskPosition: 'center'
+    }"></div>
     
     <!-- Particles Canvas -->
     <canvas ref="particlesCanvas" class="particles-layer"></canvas>
     
     <!-- RGB Glitch Layers -->
     <div class="glitch-layers">
-      <div class="glitch-layer" :style="{ backgroundImage: `url(${src})` }"></div>
-      <div class="glitch-layer" :style="{ backgroundImage: `url(${src})` }"></div>
-      <div class="glitch-layer" :style="{ backgroundImage: `url(${src})` }"></div>
+      <img :src="src" class="glitch-layer layer-1" alt="" />
+      <img :src="src" class="glitch-layer layer-2" alt="" />
+      <img :src="src" class="glitch-layer layer-3" alt="" />
     </div>
   </div>
 </template>
@@ -177,84 +204,28 @@ onUnmounted(() => {
 <style scoped>
 .glitch-container {
   position: relative;
-  width: 300px;
-  height: 300px;
+  /* Size is now controlled by parent */
+  width: 100%;
+  height: 100%;
   display: flex;
   justify-content: center;
   align-items: center;
-  overflow: hidden;
-}
-
-/* Glitch Aura - Behind everything */
-.glitch-aura {
-  position: absolute;
-  top: -10px;
-  left: -10px;
-  width: calc(100% + 20px);
-  height: calc(100% + 20px);
-  background: radial-gradient(circle, #9370DB 0%, #00FFFF 100%);
-  filter: blur(5px);
-  z-index: 1;
-  opacity: 0.5;
-  animation: aura-pulse 2s ease-in-out infinite, aura-distortion 0.333s steps(1) infinite;
-}
-
-/* Aura pulsation */
-@keyframes aura-pulse {
-  0%, 100% { opacity: 0.2; }
-  50% { opacity: 0.8; }
-}
-
-/* Aura distortion every 10 frames (~333ms at 30fps) */
-@keyframes aura-distortion {
-  0%, 90% { transform: translateX(0); }
-  10% { transform: translateX(3px); }
-  20% { transform: translateX(-4px); }
-  30% { transform: translateX(2px); }
-  40% { transform: translateX(-5px); }
-  50% { transform: translateX(4px); }
-  60% { transform: translateX(-3px); }
-  70% { transform: translateX(5px); }
-  80% { transform: translateX(-2px); }
-}
-
-/* Aura corruption blocks */
-.glitch-aura::before,
-.glitch-aura::after {
-  content: '';
-  position: absolute;
-  width: 3px;
-  height: 3px;
-  animation: corruption-flicker 0.5s steps(1) infinite;
-}
-
-.glitch-aura::before {
-  background: #FF0000;
-  top: 20%;
-  left: 30%;
-  animation-delay: 0s;
-}
-
-.glitch-aura::after {
-  background: #00FF00;
-  top: 70%;
-  left: 60%;
-  animation-delay: 0.25s;
-}
-
-@keyframes corruption-flicker {
-  0%, 40% { opacity: 0; }
-  41%, 60% { opacity: 1; }
-  61%, 100% { opacity: 0; }
+  overflow: visible; /* Changed to visible to let effects bleed slightly if needed, or keeping hidden? pure glitch usually keeps hidden but aura needs visible? Aura was absolute inside. Let's keep hidden for scanlines but maybe aura needs to be larger. */
+  /* Actually, for the aura to be seen pulsing OUTSIDE, we might want visible, but scanlines need hidden. 
+     Let's keep overflow hidden but ensure aura is inside? 
+     The aura was -10px, so it might be clipped if overflow is hidden. 
+     The original had overflow: hidden. Let's stick to that for now to contain scanlines. 
+  */
+  overflow: hidden; 
 }
 
 /* Main Image */
 .glitch-img {
   width: 100%;
   height: 100%;
-  object-fit: contain;
-  opacity: 0.85;
-  filter: drop-shadow(0 0 20px rgba(100, 200, 255, 0.4));
+  object-fit: contain; /* Important for keeping aspect ratio */
+  opacity: 1; /* Keep main image solid */
+  filter: drop-shadow(0 0 10px rgba(100, 200, 255, 0.3));
   position: relative;
   z-index: 2;
 }
@@ -272,28 +243,20 @@ onUnmounted(() => {
     0deg,
     transparent,
     transparent 2px,
-    rgba(255, 20, 147, 0.3) 2px,
-    rgba(138, 43, 226, 0.4) 3px,
-    rgba(0, 206, 209, 0.3) 4px,
+    rgba(255, 20, 147, 0.1) 2px,
+    rgba(138, 43, 226, 0.1) 3px,
+    rgba(0, 206, 209, 0.1) 4px,
     transparent 4px,
     transparent 6px
   );
   background-size: 100% 6px;
-  animation: scan-scroll 4s linear infinite, scan-distortion 0.1s steps(1) infinite;
-  opacity: 0.5;
+  animation: scan-scroll 4s linear infinite;
+  opacity: 0.3;
 }
 
-/* Scan lines scrolling */
 @keyframes scan-scroll {
   0% { background-position: 0 0; }
   100% { background-position: 0 120px; }
-}
-
-/* Scan line distortion every 3 lines */
-@keyframes scan-distortion {
-  0%, 66% { transform: translateX(0); }
-  33% { transform: translateX(3px); }
-  66% { transform: translateX(-4px); }
 }
 
 /* Particles Canvas */
@@ -316,7 +279,7 @@ onUnmounted(() => {
   height: 100%;
   z-index: 3;
   pointer-events: none;
-  opacity: 0.3;
+  mix-blend-mode: hard-light; /* Better for transparent images than screen */
 }
 
 .glitch-layer {
@@ -325,58 +288,56 @@ onUnmounted(() => {
   left: 0;
   width: 100%;
   height: 100%;
-  background-size: contain;
-  background-repeat: no-repeat;
-  background-position: center;
-  opacity: 0.5;
-  mix-blend-mode: screen;
+  object-fit: contain; /* Match main image */
+  opacity: 0.6;
+  display: block; /* ensure img behaves */
 }
 
-/* RGB channel separation */
-.glitch-layer:nth-child(1) {
-  filter: hue-rotate(0deg) saturate(2);
+/* RGB channel separation simulation using filters + mix-blend-mode */
+.layer-1 {
+  filter: hue-rotate(-5deg) saturate(2) drop-shadow(-2px 0 0 rgba(255,0,0,0.5));
   animation: glitch-anim-1 2.5s infinite linear alternate-reverse;
-  mix-blend-mode: lighten;
+  opacity: 0.5;
 }
 
-.glitch-layer:nth-child(2) {
-  filter: hue-rotate(180deg) saturate(2);
+.layer-2 {
+  filter: hue-rotate(5deg) saturate(2) drop-shadow(2px 0 0 rgba(0,255,0,0.5));
   animation: glitch-anim-2 3s infinite linear alternate-reverse;
-  mix-blend-mode: lighten;
+  opacity: 0.5;
 }
 
-.glitch-layer:nth-child(3) {
-  filter: hue-rotate(90deg) saturate(1.5);
+.layer-3 {
+  filter: hue-rotate(180deg) saturate(1.5) drop-shadow(0 2px 0 rgba(0,0,255,0.5));
   animation: glitch-anim-3 2s infinite linear alternate-reverse;
-  mix-blend-mode: screen;
+  opacity: 0.5;
 }
 
 /* Intensify on Active */
-.glitch-container.active .glitch-layer:nth-child(1) {
+.glitch-container.active .layer-1 {
   animation: glitch-anim-1-intense 0.4s infinite linear alternate-reverse;
-  opacity: 1;
+  opacity: 0.8;
+  filter: hue-rotate(-10deg) saturate(3) drop-shadow(-5px 0 0 rgba(255,0,0,0.8));
 }
 
-.glitch-container.active .glitch-layer:nth-child(2) {
+.glitch-container.active .layer-2 {
   animation: glitch-anim-2-intense 0.4s infinite linear alternate-reverse;
-  opacity: 1;
+  opacity: 0.8;
+  filter: hue-rotate(10deg) saturate(3) drop-shadow(5px 0 0 rgba(0,255,0,0.8));
 }
 
-.glitch-container.active .glitch-layer:nth-child(3) {
+.glitch-container.active .layer-3 {
   animation: glitch-anim-3-intense 0.4s infinite linear alternate-reverse;
-  opacity: 1;
+  opacity: 0.8;
+  filter: hue-rotate(180deg) saturate(3) drop-shadow(0 5px 0 rgba(0,0,255,0.8));
 }
 
 .glitch-container.active .glitch-img {
-  filter: drop-shadow(0 0 25px rgba(200, 50, 255, 0.6)) hue-rotate(90deg);
-  transition: filter 0.3s ease;
+  filter: drop-shadow(0 0 15px rgba(255, 0, 255, 0.5));
+  transform: scale(1.02);
+  transition: all 0.3s ease;
 }
 
-.glitch-container.active .glitch-aura {
-  animation: aura-pulse 1s ease-in-out infinite, aura-distortion 0.2s steps(1) infinite;
-}
-
-/* Keyframes for Subtle Glitch */
+/* Keyframes for Subtle Glitch - using clip-path on the image itself */
 @keyframes glitch-anim-1 {
   0% { clip-path: inset(20% 0 80% 0); transform: translate(-2px, 1px); }
   20% { clip-path: inset(60% 0 10% 0); transform: translate(2px, -1px); }

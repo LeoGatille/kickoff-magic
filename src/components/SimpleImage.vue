@@ -11,8 +11,9 @@ defineProps<{
 
 <style scoped>
 .magic-item {
-  max-width: 300px;
-  max-height: 300px;
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
   opacity: 0.85;
   filter: drop-shadow(0 0 20px rgba(100, 200, 255, 0.4));
   transition: opacity 0.3s ease;
