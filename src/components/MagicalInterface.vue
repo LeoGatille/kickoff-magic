@@ -4,7 +4,7 @@ import ParchmentLayout from './ParchmentLayout.vue';
 import GlitchImage from './GlitchImage.vue';
 import SimpleImage from './SimpleImage.vue';
 import VortexTransition from './VortexTransition.vue';
-import itemPotion from '../assets/item_potion.png';
+import imgHa from '../assets/HelloAsso.png';
 import itemBook from '../assets/item_book.png';
 
 const currentComponent = ref<'potion' | 'book'>('potion');
@@ -44,7 +44,7 @@ const onTransitionComplete = () => {
           <Transition name="fade" mode="out-in">
             <GlitchImage 
               v-if="showComponent && currentComponent === 'potion'"
-              :src="itemPotion"
+              :src="imgHa"
               alt="Magic Potion"
               :is-active="isButtonHovered"
               key="potion"
