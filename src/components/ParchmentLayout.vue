@@ -1,12 +1,16 @@
 <script setup lang="ts">
 import MysticCodeRain from './MysticCodeRain.vue';
+
+defineProps<{
+  active?: boolean
+}>();
 </script>
 
 <template>
   <div class="parchment-container">
     <div class="parchment-bg"></div>
     <div class="glyphs-overlay"></div>
-    <MysticCodeRain />
+    <MysticCodeRain :active="active" />
     <div class="content-slot">
       <slot></slot>
     </div>

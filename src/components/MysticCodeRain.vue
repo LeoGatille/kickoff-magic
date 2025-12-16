@@ -1,6 +1,10 @@
 <script setup lang="ts">
 import { onMounted, onUnmounted, ref } from 'vue';
 
+const props = defineProps<{
+  active?: boolean
+}>();
+
 const canvasRef = ref<HTMLCanvasElement | null>(null);
 
 // Configuration for the mystic effect
@@ -39,13 +43,25 @@ const draw = (ctx: CanvasRenderingContext2D, particles: Particle[], canvas: HTML
     ctx.fillStyle = p.color;
     ctx.fillText(p.char, p.x, p.y);
 
-    // Update position
-    p.x += p.vx;
-    p.y += p.vy;
+  // Update position
+    const speedMultiplier = props.active ? 3 : 1;
+    p.x += p.vx * speedMultiplier;
+    p.y += p.vy * speedMultiplier;
 
     // Randomly change character
     if (Math.random() > 0.95) {
        p.char = chars[Math.floor(Math.random() * chars.length)] || '?';
+       
+       // Dynamic color update based on active state
+       if (props.active) {
+         // Broader hue variety (0-360) and deeper colors (40-60% lightness)
+         const hue = Math.floor(Math.random() * 360);
+         p.color = `hsl(${hue}, ${85 + Math.random() * 15}%, ${45 + Math.random() * 15}%)`;
+       } else {
+         // Dark, low saturation
+         const hue = 20 + Math.random() * 30; // 20-50 (Browns)
+         p.color = `hsl(${hue}, ${20 + Math.random() * 20}%, ${15 + Math.random() * 15}%)`;
+       }
     }
 
     // Reset if out of bounds
@@ -83,10 +99,13 @@ const resetParticle = (p: Particle, centerX: number, centerY: number) => {
   p.weight = weights[Math.floor(Math.random() * weights.length)] || 'normal';
 
   // Color randomization
-  if (Math.random() > 0.9) {
-     p.color = '#8b4513'; // SaddleBrown glimmer
+  if (props.active) {
+     const hue = Math.floor(Math.random() * 360);
+     p.weight = '900';
+     p.color = `hsl(${hue}, ${85 + Math.random() * 15}%, ${45 + Math.random() * 15}%)`;
   } else {
-     p.color = config.textColor;
+     const hue = 20 + Math.random() * 30;
+     p.color = `hsl(${hue}, ${20 + Math.random() * 20}%, ${15 + Math.random() * 15}%)`;
   }
 };
 

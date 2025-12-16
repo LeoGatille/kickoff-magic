@@ -5,6 +5,7 @@ import itemPotion from '../assets/item_potion.png';
 import itemBook from '../assets/item_book.png';
 
 const currentComponent = ref<'potion' | 'book'>('potion');
+const isButtonHovered = ref(false);
 
 const toggleComponent = () => {
   currentComponent.value = currentComponent.value === 'potion' ? 'book' : 'potion';
@@ -12,9 +13,14 @@ const toggleComponent = () => {
 </script>
 
 <template>
-  <ParchmentLayout>
+  <ParchmentLayout :active="isButtonHovered">
     <div class="interface-container">
-      <button class="magic-button" @click="toggleComponent">
+      <button 
+        class="magic-button" 
+        @click="toggleComponent"
+        @mouseenter="isButtonHovered = true"
+        @mouseleave="isButtonHovered = false"
+      >
         Transmute
       </button>
 
