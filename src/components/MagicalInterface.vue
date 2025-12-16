@@ -1,6 +1,8 @@
 <script setup lang="ts">
 import { ref } from 'vue';
 import ParchmentLayout from './ParchmentLayout.vue';
+import GlitchImage from './GlitchImage.vue';
+import SimpleImage from './SimpleImage.vue';
 import itemPotion from '../assets/item_potion.png';
 import itemBook from '../assets/item_book.png';
 
@@ -26,18 +28,17 @@ const toggleComponent = () => {
 
       <div class="center-stage">
         <Transition name="fade" mode="out-in">
-          <img 
-            v-if="currentComponent === 'potion'" 
-            :src="itemPotion" 
-            alt="Magic Potion" 
-            class="magic-item" 
+          <GlitchImage 
+            v-if="currentComponent === 'potion'"
+            :src="itemPotion"
+            alt="Magic Potion"
+            :is-active="isButtonHovered"
             key="potion"
           />
-          <img 
-            v-else 
-            :src="itemBook" 
-            alt="Spellbook" 
-            class="magic-item" 
+          <SimpleImage 
+            v-else
+            :src="itemBook"
+            alt="Spellbook"
             key="book"
           />
         </Transition>
@@ -81,14 +82,6 @@ const toggleComponent = () => {
   display: flex;
   align-items: center;
   justify-content: center;
-}
-
-.magic-item {
-  max-width: 300px;
-  max-height: 300px;
-  opacity: 0.85; /* Slight transparency as requested */
-  filter: drop-shadow(0 0 20px rgba(100, 200, 255, 0.4));
-  transition: opacity 0.3s ease;
 }
 
 /* Transitions */
