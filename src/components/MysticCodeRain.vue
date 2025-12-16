@@ -30,9 +30,12 @@ interface Particle {
 }
 
 const draw = (ctx: CanvasRenderingContext2D, particles: Particle[], canvas: HTMLCanvasElement) => {
-  // Fade effect
-  ctx.fillStyle = config.trailColor;
+  // Fade effect using destination-out to clear slowly without painting a color
+  ctx.save();
+  ctx.globalCompositeOperation = 'destination-out';
+  ctx.fillStyle = 'rgba(0, 0, 0, 0.1)'; // Fade speed
   ctx.fillRect(0, 0, canvas.width, canvas.height);
+  ctx.restore();
 
   const centerX = canvas.width / 2;
   const centerY = canvas.height / 2;

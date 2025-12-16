@@ -9,7 +9,6 @@ defineProps<{
 <template>
   <div class="parchment-container">
     <div class="parchment-bg"></div>
-    <div class="glyphs-overlay"></div>
     <MysticCodeRain :active="active" />
     <div class="content-slot">
       <slot></slot>
@@ -30,22 +29,10 @@ defineProps<{
 .parchment-bg {
   position: absolute;
   inset: 0;
-  background-image: url('../assets/parchment_bg.png');
+  background-image: url('../assets/parchemin.png');
   background-size: cover;
   background-position: center;
   z-index: -2;
-}
-
-.glyphs-overlay {
-  position: absolute;
-  inset: 0;
-  background-image: url('../assets/glyphs_pattern.png');
-  background-repeat: repeat;
-  background-size: 200px; /* Adjust size as needed */
-  opacity: 0.7;
-  z-index: -1;
-  mask-image: radial-gradient(circle at center, transparent 20%, black 60%);
-  -webkit-mask-image: radial-gradient(circle at center, transparent 20%, black 60%);
 }
 
 .content-slot {
