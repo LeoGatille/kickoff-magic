@@ -44,23 +44,23 @@ let particles: Particle[] = [];
 // Explosion Logic
 const spawnExplosion = () => {
   particles = [];
-  const colors = ['#FFD700', '#FF4500', '#FFFFFF', '#FFFF00']; // Gold, Orange-Red, White, Yellow
+  const colors = ['#FFD700', '#FF4500', '#FFFFFF', '#FFFF00', '#FF8C00']; // Added DarkOrange
   
-  // Create burst of particles
-  for (let i = 0; i < 400; i++) {
+  // Create massive burst of particles
+  for (let i = 0; i < 1200; i++) {
     const angle = Math.random() * Math.PI * 2;
-    // High velocity for explosion
-    const speed = Math.random() * 25 + 10; 
+    // Very high velocity for massive explosion, with more variance
+    const speed = Math.random() * 35 + 15; 
     
     particles.push({
       x: centerX,
       y: centerY,
       vx: Math.cos(angle) * speed,
       vy: Math.sin(angle) * speed,
-      size: Math.random() * 5 + 2,
+      size: Math.random() * 6 + 1, // varied sizes
       color: colors[Math.floor(Math.random() * colors.length)]!,
       alpha: 1,
-      decay: Math.random() * 0.02 + 0.005
+      decay: Math.random() * 0.015 + 0.002 // slower decay for longer lasting particles
     });
   }
 };
