@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import { onMounted, onUnmounted, ref } from 'vue';
+import { getIconPath, getRandomIconName, type IconName } from '../utils/iconUtils';
 
 const props = defineProps<{
   active?: boolean
@@ -24,6 +25,7 @@ interface Particle {
   vx: number;
   vy: number;
   char: string;
+  icon?: IconName;
   color: string;
   size: number;
   weight: string;
@@ -37,23 +39,49 @@ const draw = (ctx: CanvasRenderingContext2D, particles: Particle[], canvas: HTML
   ctx.fillRect(0, 0, canvas.width, canvas.height);
   ctx.restore();
 
+  // const centerX = canvas.width / 2; // Unused
   const centerX = canvas.width / 2;
   const centerY = canvas.height / 2;
 
   particles.forEach(p => {
-    // Set particle specific font
-    ctx.font = `${p.weight} ${p.size}px ${config.fontFamily}`;
     ctx.fillStyle = p.color;
-    ctx.fillText(p.char, p.x, p.y);
+
+    if (p.icon) {
+      const path = getIconPath(p.icon);
+      if (path) {
+        ctx.save();
+        ctx.translate(p.x, p.y);
+        // Scale to match font size (roughly) but larger
+        // Lucide icons are 24x24. p.size is px height.
+        const scale = (p.size * 1.5) / 24; 
+        ctx.scale(scale, scale);
+        ctx.fill(path);
+        ctx.restore();
+      }
+    } else {
+        ctx.font = `${p.weight} ${p.size}px ${config.fontFamily}`;
+        ctx.fillText(p.char, p.x, p.y);
+    }
 
   // Update position
     const speedMultiplier = props.active ? 3 : 1;
     p.x += p.vx * speedMultiplier;
     p.y += p.vy * speedMultiplier;
 
-    // Randomly change character
+    // Randomly change character or icon
     if (Math.random() > 0.95) {
-       p.char = chars[Math.floor(Math.random() * chars.length)] || '?';
+       if (Math.random() < 0.1) {
+          // Small chance to flip icon/char state
+          if (p.icon) {
+             if (Math.random() < 0.2) p.icon = getRandomIconName();
+          } else {
+             if (Math.random() < 0.1) p.icon = getRandomIconName(); 
+          }
+       }
+       
+       if (!p.icon) {
+        p.char = chars[Math.floor(Math.random() * chars.length)] || '?';
+       }
        
        // Dynamic color update based on active state
        if (props.active) {
@@ -92,7 +120,14 @@ const resetParticle = (p: Particle, centerX: number, centerY: number) => {
   p.vx = Math.cos(angle) * speed;
   p.vy = Math.sin(angle) * speed;
   
-  p.char = chars[Math.floor(Math.random() * chars.length)] || '?';
+  // 10% chance to be an icon
+  if (Math.random() < 0.10) {
+      p.icon = getRandomIconName();
+      p.char = '';
+  } else {
+      p.icon = undefined;
+      p.char = chars[Math.floor(Math.random() * chars.length)] || '?';
+  }
   
   // Size variety: 10px to 32px
   p.size = Math.floor(10 + Math.random() * 22);
@@ -131,7 +166,7 @@ onMounted(() => {
     if (particles.length === 0) {
        // Init
        for (let i = 0; i < particleCount; i++) {
-        const p = { x: 0, y: 0, vx: 0, vy: 0, char: '', color: '', size: 16, weight: 'normal' };
+        const p = { x: 0, y: 0, vx: 0, vy: 0, char: '', color: '', size: 16, weight: 'normal' } as Particle;
         resetParticle(p, canvas.width / 2, canvas.height / 2);
         // Scramble positions
         p.x = Math.random() * canvas.width;

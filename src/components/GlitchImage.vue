@@ -187,7 +187,7 @@ onUnmounted(() => {
       webkitMaskSize: 'contain', 
       webkitMaskRepeat: 'no-repeat', 
       webkitMaskPosition: 'center'
-    }"></div>
+    } as any"></div>
     
     <!-- Particles Canvas -->
     <canvas ref="particlesCanvas" class="particles-layer"></canvas>

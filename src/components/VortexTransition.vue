@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import { ref, onMounted, onUnmounted, watch } from 'vue';
+import { getIconPath, getRandomIconName, type IconName } from '../utils/iconUtils';
 
 const props = defineProps<{
   isTransitioning: boolean;
@@ -37,6 +38,7 @@ interface Particle {
   color: string;
   alpha: number;
   decay: number;
+  icon?: IconName;
 }
 
 let particles: Particle[] = [];
@@ -52,6 +54,9 @@ const spawnExplosion = () => {
     // Very high velocity for massive explosion, with more variance
     const speed = Math.random() * 35 + 15; 
     
+    // 20% chance to be an icon
+    const icon = Math.random() < 0.2 ? getRandomIconName() : undefined;
+
     particles.push({
       x: centerX,
       y: centerY,
@@ -60,7 +65,8 @@ const spawnExplosion = () => {
       size: Math.random() * 6 + 1, // varied sizes
       color: colors[Math.floor(Math.random() * colors.length)]!,
       alpha: 1,
-      decay: Math.random() * 0.015 + 0.002 // slower decay for longer lasting particles
+      decay: Math.random() * 0.015 + 0.002, // slower decay for longer lasting particles
+      icon
     });
   }
 };
@@ -92,11 +98,28 @@ const drawParticles = () => {
     p.alpha -= p.decay;
 
     if (p.alpha > 0) {
-      ctx!.globalAlpha = p.alpha;
-      ctx!.fillStyle = p.color;
-      ctx!.beginPath();
-      ctx!.arc(p.x, p.y, p.size, 0, Math.PI * 2);
-      ctx!.fill();
+      if (p.icon) {
+        const path = getIconPath(p.icon);
+        if (path) {
+            ctx!.save();
+            ctx!.globalAlpha = p.alpha;
+            ctx!.fillStyle = p.color;
+            ctx!.translate(p.x, p.y);
+            // Icons are naturally 24px. Scale to match particle size preference.
+            // Particle size is 1-7. Icons should be a bit larger to be visible.
+            // Let's make icons 5x the particle size to be distinct "chunks"
+            const scale = (p.size * 5) / 24; 
+            ctx!.scale(scale, scale);
+            ctx!.fill(path);
+            ctx!.restore();
+        }
+      } else {
+        ctx!.globalAlpha = p.alpha;
+        ctx!.fillStyle = p.color;
+        ctx!.beginPath();
+        ctx!.arc(p.x, p.y, p.size, 0, Math.PI * 2);
+        ctx!.fill();
+      }
     } else {
       particles.splice(index, 1);
     }
