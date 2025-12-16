@@ -5,11 +5,9 @@ const canvasRef = ref<HTMLCanvasElement | null>(null);
 
 // Configuration for the mystic effect
 const config = {
-  fontSize: 16,
   fontFamily: '"Cinzel", "Courier New", monospace', 
   textColor: '#4a3b2a', 
-  trailColor: 'rgba(240, 230, 210, 0.3)', // Slightly more opaque trail for radial to look good
-  speedBase: 2,
+  trailColor: 'rgba(240, 230, 210, 0.3)', 
 };
 
 let animationId: number;
@@ -23,6 +21,8 @@ interface Particle {
   vy: number;
   char: string;
   color: string;
+  size: number;
+  weight: string;
 }
 
 const draw = (ctx: CanvasRenderingContext2D, particles: Particle[], canvas: HTMLCanvasElement) => {
@@ -30,13 +30,12 @@ const draw = (ctx: CanvasRenderingContext2D, particles: Particle[], canvas: HTML
   ctx.fillStyle = config.trailColor;
   ctx.fillRect(0, 0, canvas.width, canvas.height);
 
-  ctx.font = `${config.fontSize}px ${config.fontFamily}`;
-
   const centerX = canvas.width / 2;
   const centerY = canvas.height / 2;
 
   particles.forEach(p => {
-    // Draw particle
+    // Set particle specific font
+    ctx.font = `${p.weight} ${p.size}px ${config.fontFamily}`;
     ctx.fillStyle = p.color;
     ctx.fillText(p.char, p.x, p.y);
 
@@ -50,8 +49,8 @@ const draw = (ctx: CanvasRenderingContext2D, particles: Particle[], canvas: HTML
     }
 
     // Reset if out of bounds
-    // We add a margin so they fully clear the screen before resetting
-    const margin = 50;
+    // Margin depends on max size to ensure clear
+    const margin = 100;
     if (
       p.x < -margin || 
       p.x > canvas.width + margin || 
@@ -66,12 +65,23 @@ const draw = (ctx: CanvasRenderingContext2D, particles: Particle[], canvas: HTML
 const resetParticle = (p: Particle, centerX: number, centerY: number) => {
   p.x = centerX;
   p.y = centerY;
+  
+  // Randomize properties
   const angle = Math.random() * Math.PI * 2;
-  const speed = config.speedBase + Math.random() * 2; // Variance in speed
+  // Speed variety: 0.5 to 4
+  const speed = 0.5 + Math.random() * 3.5; 
   p.vx = Math.cos(angle) * speed;
   p.vy = Math.sin(angle) * speed;
+  
   p.char = chars[Math.floor(Math.random() * chars.length)] || '?';
   
+  // Size variety: 10px to 32px
+  p.size = Math.floor(10 + Math.random() * 22);
+  
+  // Weight variety
+  const weights = ['normal', 'bold', '100', '900'];
+  p.weight = weights[Math.floor(Math.random() * weights.length)] || 'normal';
+
   // Color randomization
   if (Math.random() > 0.9) {
      p.color = '#8b4513'; // SaddleBrown glimmer
@@ -93,17 +103,15 @@ onMounted(() => {
     canvas.width = window.innerWidth;
     canvas.height = window.innerHeight;
     
-    // Re-init particles on resize or just let them flow?
-    // Let's ensure we have enough particles for the new size
+    // Density
     const particleCount = Math.floor((canvas.width * canvas.height) / 4000); 
     
     if (particles.length === 0) {
        // Init
        for (let i = 0; i < particleCount; i++) {
-        const p = { x: 0, y: 0, vx: 0, vy: 0, char: '', color: '' };
-        // Start them at random positions initially so it doesn't just explode all at once from center
+        const p = { x: 0, y: 0, vx: 0, vy: 0, char: '', color: '', size: 16, weight: 'normal' };
         resetParticle(p, canvas.width / 2, canvas.height / 2);
-        // Scramble positions initially to fill screen
+        // Scramble positions
         p.x = Math.random() * canvas.width;
         p.y = Math.random() * canvas.height;
         particles.push(p);
