@@ -1,11 +1,12 @@
 <script setup lang="ts">
-// Parchment Layout Component
+import MysticCodeRain from './MysticCodeRain.vue';
 </script>
 
 <template>
   <div class="parchment-container">
     <div class="parchment-bg"></div>
     <div class="glyphs-overlay"></div>
+    <MysticCodeRain />
     <div class="content-slot">
       <slot></slot>
     </div>
