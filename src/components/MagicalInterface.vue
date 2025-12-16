@@ -3,14 +3,24 @@ import { ref } from 'vue';
 import ParchmentLayout from './ParchmentLayout.vue';
 import GlitchImage from './GlitchImage.vue';
 import SimpleImage from './SimpleImage.vue';
+import VortexTransition from './VortexTransition.vue';
 import itemPotion from '../assets/item_potion.png';
 import itemBook from '../assets/item_book.png';
 
 const currentComponent = ref<'potion' | 'book'>('potion');
 const isButtonHovered = ref(false);
+const isTransitioning = ref(false);
+const showComponent = ref(true);
 
 const toggleComponent = () => {
+  isTransitioning.value = true;
+  showComponent.value = false;
+};
+
+const onTransitionComplete = () => {
   currentComponent.value = currentComponent.value === 'potion' ? 'book' : 'potion';
+  isTransitioning.value = false;
+  showComponent.value = true;
 };
 </script>
 
@@ -27,21 +37,26 @@ const toggleComponent = () => {
       </button>
 
       <div class="center-stage">
-        <Transition name="fade" mode="out-in">
-          <GlitchImage 
-            v-if="currentComponent === 'potion'"
-            :src="itemPotion"
-            alt="Magic Potion"
-            :is-active="isButtonHovered"
-            key="potion"
-          />
-          <SimpleImage 
-            v-else
-            :src="itemBook"
-            alt="Spellbook"
-            key="book"
-          />
-        </Transition>
+        <VortexTransition 
+          :is-transitioning="isTransitioning"
+          @transition-complete="onTransitionComplete"
+        >
+          <Transition name="fade" mode="out-in">
+            <GlitchImage 
+              v-if="showComponent && currentComponent === 'potion'"
+              :src="itemPotion"
+              alt="Magic Potion"
+              :is-active="isButtonHovered"
+              key="potion"
+            />
+            <SimpleImage 
+              v-else-if="showComponent && currentComponent === 'book'"
+              :src="itemBook"
+              alt="Spellbook"
+              key="book"
+            />
+          </Transition>
+        </VortexTransition>
       </div>
     </div>
   </ParchmentLayout>
@@ -85,15 +100,22 @@ const toggleComponent = () => {
 }
 
 /* Transitions */
-.fade-enter-active,
-.fade-leave-active {
-  transition: all 0.5s ease;
+.fade-enter-active {
+  transition: all 0.4s ease;
 }
 
-.fade-enter-from,
+.fade-leave-active {
+  transition: all 0.3s ease;
+}
+
+.fade-enter-from {
+  opacity: 0;
+  transform: scale(1.2);
+}
+
 .fade-leave-to {
   opacity: 0;
-  transform: scale(0.9);
-  filter: blur(10px);
+  transform: scale(0.5);
+  filter: blur(5px);
 }
 </style>
